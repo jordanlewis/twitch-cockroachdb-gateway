@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/gempir/go-twitch-irc/v2"
+	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
@@ -57,7 +58,19 @@ func main() {
 	client := twitch.NewAnonymousClient()
 	client.Join("twitchrunscockroachdb")
 	url := os.Getenv("DATABASE_URL")
-	pool, err := pgxpool.Connect(ctx, url)
+	config, err := pgxpool.ParseConfig(url)
+	if err != nil {
+		panic(err)
+	}
+	config.BeforeAcquire = func(ctx context.Context, conn *pgx.Conn) bool {
+		_, err := conn.Exec(ctx, "SET statement_timeout='5s'")
+		if err != nil {
+			fmt.Println("error acquiring connection", err)
+			return false
+		}
+		return true
+	}
+	pool, err := pgxpool.ConnectConfig(ctx, config)
 	if err != nil {
 		panic(err)
 	}
