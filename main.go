@@ -41,9 +41,11 @@ var stmts = []string{
 	"SELECT",
 	//"SET",
 	"SHOW",
+	"TABLE",
 	"TRUNCATE",
 	"UPDATE",
 	"UPSERT",
+	"VALUES",
 }
 
 var stmtsMap map[string]struct{}
