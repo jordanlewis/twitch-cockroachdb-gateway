@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/gempir/go-twitch-irc/v2"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -35,7 +36,7 @@ var stmts = []string{
 	//"REVOKE",
 	"SAVEPOINT",
 	"SELECT",
-	"SET",
+	//"SET",
 	"SHOW",
 	"TRUNCATE",
 	"UPDATE",
@@ -64,9 +65,9 @@ func main() {
 	//connInfo := pgtype.NewConnInfo()
 	processMessage := func(message twitch.PrivateMessage) {
 		tokens := strings.Split(message.Message, " ")
-		fmt.Println(tokens, tokens[0])
 		if _, ok := stmtsMap[strings.ToUpper(tokens[0])]; ok {
-			fmt.Printf("%s said `%s`\n", message.User.DisplayName, message.Message)
+			fmt.Printf("%s: `%s`\n", message.User.DisplayName, message.Message)
+			ctx, _ := context.WithTimeout(ctx, 10*time.Second)
 			rows, err := pool.Query(ctx, message.Message)
 			if err != nil {
 				fmt.Println(err)
@@ -74,9 +75,20 @@ func main() {
 			}
 			i := 0
 			for rows.Next() {
+				if i == 0 {
+					sb := strings.Builder{}
+					for i, col := range rows.FieldDescriptions() {
+						if i > 0 {
+							sb.WriteRune(',')
+						}
+						sb.WriteString(string(col.Name))
+					}
+					fmt.Println(sb.String())
+				}
 				i++
 				if i > 10 {
-					continue
+					rows.Close()
+					break
 				}
 
 				sb := strings.Builder{}
@@ -93,14 +105,18 @@ func main() {
 				}
 				fmt.Println(sb.String())
 			}
-			if i > 10 {
-				fmt.Printf("... and %d more rows ...\n", i-10)
-			}
-
 			if err := rows.Err(); err != nil {
 				fmt.Println(err)
 				return
 			}
+			if i > 10 {
+				fmt.Printf("... more rows ...\n")
+			}
+			if i == 0 && !rows.CommandTag().Select() {
+				// Print the command tag if it wasn't a select.
+				fmt.Println(rows.CommandTag())
+			}
+
 		}
 	}
 	client.OnPrivateMessage(processMessage)
