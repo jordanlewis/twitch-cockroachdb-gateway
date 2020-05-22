@@ -49,10 +49,23 @@ var stmts = []string{
 }
 
 var blacklist = map[string]struct{}{
-	"SESSIONS":       {},
-	"USERS":          {},
-	"ROLES":          {},
-	"CONFIGURATIONS": {},
+	"SESSIONS":                       {},
+	"USER":                           {},
+	"ROLE":                           {},
+	"USERS":                          {},
+	"ROLES":                          {},
+	"CONFIGURATIONS":                 {},
+	"CLUSTER":                        {},
+	"SETTINGS":                       {},
+	"SETTING":                        {},
+	"CRDB_INTERNAL.CLUSTER_SETTINGS": {},
+	"CRDB_INTERNAL.NODE_SESSIONS":    {},
+	"CRDB_INTERNAL.CLUSTER_SESSIONS": {},
+	"CLUSTER_SESSIONS":               {},
+	"NODE_SESSIONS":                  {},
+	"SET_CONFIG":                     {},
+	"PG_CATALOG.SET_CONFIG":          {},
+	"JOBS":                           {},
 }
 
 var stmtsMap map[string]struct{}
@@ -98,6 +111,9 @@ func main() {
 	processMessage := func(message twitch.PrivateMessage) {
 		if err := func() error {
 			tokens := strings.Split(message.Message, " ")
+			for i := range tokens {
+				tokens[i] = strings.ToUpper(tokens[i])
+			}
 			for i := range tokens {
 				if _, ok := blacklist[tokens[i]]; ok {
 					return nil
@@ -168,12 +184,10 @@ func main() {
 	}
 	client.OnPrivateMessage(processMessage)
 
-	/*
-		processMessage(twitch.PrivateMessage{
-			User:    twitch.User{DisplayName: "jordan"},
-			Message: "select 'foo'::bytea, gen_random_uuid(), now()::time",
-		})
-	*/
+	processMessage(twitch.PrivateMessage{
+		User:    twitch.User{DisplayName: "jordan"},
+		Message: "show cluster settings",
+	})
 
 	if err := client.Connect(); err != nil {
 		panic(err)
