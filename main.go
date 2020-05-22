@@ -48,6 +48,13 @@ var stmts = []string{
 	"VALUES",
 }
 
+var blacklist = map[string]struct{}{
+	"SESSIONS":       {},
+	"USERS":          {},
+	"ROLES":          {},
+	"CONFIGURATIONS": {},
+}
+
 var stmtsMap map[string]struct{}
 
 func init() {
@@ -91,6 +98,11 @@ func main() {
 	processMessage := func(message twitch.PrivateMessage) {
 		if err := func() error {
 			tokens := strings.Split(message.Message, " ")
+			for i := range tokens {
+				if _, ok := blacklist[tokens[i]]; ok {
+					return nil
+				}
+			}
 			if _, ok := stmtsMap[strings.ToUpper(tokens[0])]; ok {
 				fmt.Printf("%s: `%s`\n", message.User.DisplayName, message.Message)
 				ctx, _ := context.WithTimeout(ctx, 10*time.Second)
