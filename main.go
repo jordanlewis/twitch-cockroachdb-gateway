@@ -48,7 +48,7 @@ var stmts = []string{
 	"VALUES",
 }
 
-var blacklist = map[string]struct{}{
+var blocklist = map[string]struct{}{
 	"SESSIONS":                       {},
 	"USER":                           {},
 	"ROLE":                           {},
@@ -115,7 +115,7 @@ func main() {
 				tokens[i] = strings.ToUpper(tokens[i])
 			}
 			for i := range tokens {
-				if _, ok := blacklist[tokens[i]]; ok {
+				if _, ok := blocklist[strings.Trim(tokens[i], " \t;")]; ok {
 					return nil
 				}
 			}
