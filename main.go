@@ -66,6 +66,13 @@ var blocklist = map[string]struct{}{
 	"SET_CONFIG":                     {},
 	"PG_CATALOG.SET_CONFIG":          {},
 	"JOBS":                           {},
+	"BACKUP":                         {},
+	"IMPORT":                         {},
+	"EXPORT":                         {},
+	"RESTORE":                        {},
+	"GRANT":                          {},
+	"REVOKE":                         {},
+	"COPY":                           {},
 }
 
 var stmtsMap map[string]struct{}
